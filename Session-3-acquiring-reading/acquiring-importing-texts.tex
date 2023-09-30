@@ -46,18 +46,21 @@
   \frame{\subsectionpage}
 }
 \usepackage{amsmath,amssymb}
-\usepackage{lmodern}
 \usepackage{iftex}
 \ifPDFTeX
   \usepackage[T1]{fontenc}
   \usepackage[utf8]{inputenc}
   \usepackage{textcomp} % provide euro and other symbols
 \else % if luatex or xetex
-  \usepackage{unicode-math}
+  \usepackage{unicode-math} % this also loads fontspec
   \defaultfontfeatures{Scale=MatchLowercase}
   \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
 \fi
+\usepackage{lmodern}
 \usetheme[]{Singapore}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
 % Use upquote if available, for straight quotes in verbatim environments
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 \IfFileExists{microtype.sty}{% use microtype if available
@@ -157,7 +160,7 @@
 \bibliographystyle{plainnat}
 \IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
-\urlstyle{same} % disable monospaced font for URLs
+\urlstyle{same}
 \hypersetup{
   pdftitle={Acquiring and importing texts},
   pdfauthor={Max Callaghan},
@@ -208,7 +211,6 @@ We will explore how to gain access to the following sources of text
 \begin{itemize}
   \item<1-> The IEA's Policies and Measures database, by scraping the website
   \item<2-> Scientific articles, using the OpenAlex API
-  \item<2-> Twitter posts, using their API
   \item<3-> Parliamentary data, by parsing XML data published by Hansard
 \end{itemize}
 \end{frame}
@@ -271,7 +273,12 @@ own set of headers.
 \end{col}
 
 \begin{col}{0.60\textwidth}
+
+\begin{figure}
+\centering
 \includegraphics{iea_network_request.png}
+\caption{IEA Network Screenshot}
+\end{figure}
 
 \end{col}
 
@@ -385,7 +392,12 @@ this hierarchy we refer to
 \end{col}
 
 \begin{col}{0.60\textwidth}
+
+\begin{figure}
+\centering
 \includegraphics{iea_html.png}
+\caption{IEA Network Screenshot}
+\end{figure}
 
 \end{col}
 
@@ -930,7 +942,7 @@ We can use RVest to parse these
 \begin{Shaded}
 \begin{Highlighting}[]
 \FunctionTok{library}\NormalTok{(rvest)}
-\NormalTok{data }\OtherTok{\textless{}{-}} \FunctionTok{read\_html}\NormalTok{(}\StringTok{"https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates2022{-}09{-}10a.xml"}\NormalTok{)}
+\NormalTok{data }\OtherTok{\textless{}{-}} \FunctionTok{read\_html}\NormalTok{(}\StringTok{"https://www.theyworkforyou.com/pwdata/scrapedxml/debates/debates2023{-}09{-}19b.xml"}\NormalTok{)}
 \NormalTok{speeches }\OtherTok{\textless{}{-}}\NormalTok{ data }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{html\_elements}\NormalTok{(}\StringTok{"speech"}\NormalTok{) }
 \NormalTok{df }\OtherTok{\textless{}{-}} \FunctionTok{as\_tibble}\NormalTok{(}\FunctionTok{do.call}\NormalTok{(rbind, }\FunctionTok{html\_attrs}\NormalTok{(speeches)))}
 \NormalTok{df}\SpecialCharTok{$}\NormalTok{text }\OtherTok{\textless{}{-}}\NormalTok{ speeches }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{html\_text}\NormalTok{()}
@@ -939,14 +951,21 @@ We can use RVest to parse these
 \end{Shaded}
 
 \begin{verbatim}
-## # A tibble: 4 x 8
-##   id                              speak~1 type  perso~2 colnum time  url   text 
-##   <chr>                           <chr>   <chr> <chr>   <chr>  <chr> <chr> <chr>
-## 1 uk.org.publicwhip/debate/2022-~ Lindsa~ uk.o~ 654     ""     ""    "uk.~ "I w~
-## 2 uk.org.publicwhip/debate/2022-~ Lindsa~ uk.o~ 654     ""     ""    "uk.~ "We ~
-## 3 uk.org.publicwhip/debate/2022-~ Stephe~ Star~ uk.org~ "712"  "16:~ ""    "Tha~
-## 4 uk.org.publicwhip/debate/2022-~ Robert~ Star~ uk.org~ "733"  "18:~ ""    "Thu~
-## # ... with abbreviated variable names 1: speakername, 2: person_id
+## # A tibble: 385 x 9
+##    id                     speak~1 type  perso~2 colnum time  url   oral-~3 text 
+##    <chr>                  <chr>   <chr> <chr>   <chr>  <chr> <chr> <chr>   <chr>
+##  1 uk.org.publicwhip/deb~ Lindsa~ uk.o~ "1213"  ""     ""    "uk.~ Lindsa~ "May~
+##  2 uk.org.publicwhip/deb~ true    1213  ""      ""     "uk.~ "tru~ 1213    "The~
+##  3 uk.org.publicwhip/deb~ Peter ~ Star~ "uk.or~ "1213" ""    ""    1       "Wha~
+##  4 uk.org.publicwhip/deb~ Selain~ Star~ "uk.or~ "1213" ""    ""    2       "Wha~
+##  5 uk.org.publicwhip/deb~ Lindsa~ uk.o~ "1213"  ""     ""    "uk.~ Lindsa~ "I w~
+##  6 uk.org.publicwhip/deb~ Claire~ Star~ "uk.or~ "1213" ""    ""    uk.org~ "Our~
+##  7 uk.org.publicwhip/deb~ Peter ~ Star~ "uk.or~ "1213" ""    ""    uk.org~ "I w~
+##  8 uk.org.publicwhip/deb~ Claire~ Star~ "uk.or~ "1213" ""    ""    uk.org~ "I t~
+##  9 uk.org.publicwhip/deb~ Selain~ Star~ "uk.or~ "1214" ""    ""    uk.org~ "Que~
+## 10 uk.org.publicwhip/deb~ Claire~ Star~ "uk.or~ "1214" ""    ""    uk.org~ "I k~
+## # ... with 375 more rows, and abbreviated variable names 1: speakername,
+## #   2: person_id, 3: `oral-qnum`
 \end{verbatim}
 \end{frame}
 
