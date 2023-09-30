@@ -1,0 +1,33 @@
+---
+title: "Assignment 2"
+author: "Max Eckert"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(reticulate)
+library(quanteda)
+library(lexicon)
+library(httr)
+library(rvest)
+library(xml2)
+```
+
+### 1.1
+
+```{r echo=TRUE, include=TRUE, cache=TRUE}
+library(httr)
+Link <- "https://www.bundestag.de/resource/blob/965008/bc565531d452cc9b3694062dfe4c71ff/20119-data.xml"
+parldata <- read_xml(parldata)
+```
+
+### 1.2
+```{r}
+all_elements <- xml_find_all(parldata, xpath = "//*")
+```
+
+
+
+
