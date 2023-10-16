@@ -1,0 +1,82 @@
+---
+title: "Assignment 3"
+author: "Max Eckert"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# String manipulation
+
+The following homework sets you a challenging task to give structure to raw text. You will need to look through the text to discover text patterns that will allow you to split, join, and extract in order to create the structure we are looking for. If you struggle to implement this, describe in words how you would plan to go about the task, thinking about how to split this into subtasks and how to describe these. 
+
+To start with, you are asked to retrieve Songs of Innocence and of Experience by William Blake from Project Gutenberg. It is located at https://www.gutenberg.org/cache/epub/1934/pg1934.txt. This is a collection of
+poems in two books: *Songs of Innocence* and *Songs of Experience*.
+
+The goal of the task is to parse this into a dataframe where each row is a line of a poem (there should be no empty lines). The following columns should describe where each line was found:
+
+- line_number
+- stanza_number
+- poem_title
+- book_title
+
+# Substeps
+
+Think about how to split this up into smaller tasks before bringing this all together. Remember that when working on loops it is often easier to work with a single item in the list first, before putting this into a loop. There will be other ways to approach this, but a step-by-step approach will do the following:
+
+- Get the content of the book (removing publisher information, contents, and the copyright notice)
+- Split the book into the two sub-books (Songs of Innocence and Songs of Experience)
+- Split each book into poems
+- Split each poem into stanzas (verses)
+- Split each stanza into lines
+
+```{r}
+for(pkg in c("kableExtra", "dplyr", "readr", "stringr","tibble","tidyr")){
+  library(pkg, character.only = TRUE)
+}
+```
+Using _view source_ in the Browser, I identified the relevant section to start at line 105 and end in 1504.
+
+```{r}
+url <- "https://www.gutenberg.org/cache/epub/1934/pg1934.txt"
+txt <- read_lines(url,skip = 104, n_max = 1401)
+```
+
+```{r}
+head(txt,10)
+tail(txt, 10)
+```
+
+```{r}
+df <- txt %>% 
+      as_tibble_col(column_name = "text") %>% 
+      mutate(
+        start_book = str_detect(txt, "^SONGS OF"),
+        start_poem = str_detect(txt, "^(?:[A-Z,’-]+\\s*)+$"),
+        start_stanza = !start_book & !start_poem & txt != "" &
+          lag(str_detect(txt, "^\\s*$"), default = FALSE),
+        book_title = ifelse(start_book, txt, NA),
+        poem_title = ifelse(start_poem, txt, NA)
+        ) %>% 
+        fill(book_title, poem_title) %>%  
+        filter(text != "") %>%  
+         group_by(book_title, poem_title) %>%  
+         mutate(stanza_number = ifelse(start_stanza, cumsum(start_stanza), NA)) %>%  
+        fill(stanza_number)  %>% 
+        group_by(book_title, poem_title, stanza_number) %>%  
+        mutate(line_number = cumsum(!start_book & !start_poem)) %>%  
+        ungroup() %>% 
+        filter(!start_book, !start_poem) %>%  
+        select(-c("start_poem","start_book","start_stanza")) %>%   
+        relocate(text, .after = last_col()) 
+```
+
+```{r}
+df %>% head(10) 
+```
+
+
+
